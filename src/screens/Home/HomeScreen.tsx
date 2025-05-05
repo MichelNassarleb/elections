@@ -16,6 +16,7 @@ type RecordType = {
   name: string;
   count?: number;
   list: string;
+  type: 'makhtara' | 'baladiyye';
 };
 
 export const HomeScreen = () => {
@@ -65,13 +66,13 @@ export const HomeScreen = () => {
     update(ref(db, `/candidatesBaladiyye/${key}`), { count: updatedCount });
   };
 
-  const updateGroupCount = (listValue: string, delta: number) => {
+  const updateGroupCountByType = (listValue: string, type: 'makhtara' | 'baladiyye', delta: number) => {
     if (!isAuthorized) return;
     const db = getDatabase(app);
     const updates: Record<string, any> = {};
 
     Object.entries(records).forEach(([key, value]) => {
-      if (value.list === listValue) {
+      if (value.list === listValue && value.type === type) {
         const currentCount = value.count || 0;
         updates[`/candidatesBaladiyye/${key}/count`] = Math.max(0, currentCount + delta);
       }
@@ -81,31 +82,40 @@ export const HomeScreen = () => {
   };
 
   const handlePasswordSubmit = () => {
-    if (password === 'CJAGB982') {
+    if (password === '111222') {
       setIsAuthorized(true);
     }
     setShowPasswordModal(false);
   };
 
-  const renderList = (listName: string) => {
-    const filtered = Object.entries(records).filter(([_, val]) => val.list === listName);
-
+  const renderSection = (title: 'Makhtara' | 'Baladiyye', data: [string, RecordType][], listName: string) => {
     return (
-      <div className="list-section">
-        <div className="list-header">
-          <h2 className="list-title">List {listName}</h2>
+      <div className="subsection">
+        <div className="subsection-header">
+          <h3 className="subsection-title">{title}</h3>
           {isAuthorized && (
             <div className="group-buttons">
-              <button className="btn plus" onClick={() => updateGroupCount(listName, 1)}>+ All</button>
-              <button className="btn minus" onClick={() => updateGroupCount(listName, -1)}>- All</button>
+              <button
+                className="btn plus"
+                onClick={() => updateGroupCountByType(listName, title.toLowerCase() as 'makhtara' | 'baladiyye', 1)}
+              >
+                + All
+              </button>
+              <button
+                className="btn minus"
+                onClick={() => updateGroupCountByType(listName, title.toLowerCase() as 'makhtara' | 'baladiyye', -1)}
+              >
+                - All
+              </button>
             </div>
           )}
         </div>
-        {filtered.length === 0 ?
+        {data.length === 0 ? (
           <div className="spinner-container">
             <div className="spinner" />
           </div>
-          : filtered.map(([key, value]) => (
+        ) : (
+          data.map(([key, value]) => (
             <div className="card" key={key}>
               <h3 className="name">{value.name}</h3>
               <p className="count">Count: {value.count || 0}</p>
@@ -116,10 +126,29 @@ export const HomeScreen = () => {
                 </div>
               )}
             </div>
-          ))}
+          ))
+        )}
       </div>
     );
   };
+
+  const renderList = (listName: string) => {
+    const filtered = Object.entries(records).filter(([_, val]) => val.list === listName);
+    const makhtara = filtered.filter(([_, val]) => val.type === 'makhtara');
+    const baladiyye = filtered.filter(([_, val]) => val.type === 'baladiyye');
+
+    return (
+      <div className="list-section" key={listName}>
+        <div className="list-header">
+          <h2 className="list-title">List {listName}</h2>
+        </div>
+        {renderSection('Makhtara', makhtara, listName)}
+        {renderSection('Baladiyye', baladiyye, listName)}
+      </div>
+    );
+  };
+
+  const listNames = Array.from(new Set(Object.values(records).map(r => r.list))).sort();
 
   return (
     <div className="homescreen">
@@ -140,9 +169,8 @@ export const HomeScreen = () => {
         </div>
       )}
 
-      <div className="column-container">
-        {renderList("1")}
-        {renderList("2")}
+      <div className={`column-container ${listNames.length > 2 ? 'single-column' : ''}`}>
+        {listNames.map(renderList)}
       </div>
     </div>
   );
