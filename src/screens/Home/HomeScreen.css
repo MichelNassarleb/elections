@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
 :root {
   --primary-color: #4caf50;
   --danger-color: #f44336;
@@ -8,10 +10,15 @@
   --card-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
 }
 
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(to right, var(--light-gray), var(--white));
+}
+
 .homescreen {
   padding: 20px;
-  font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(to right, var(--light-gray), var(--white));
   min-height: 100vh;
 }
 
@@ -34,13 +41,12 @@
 
 @media (max-width: 1000px) {
   .column-container {
-    min-width: 840px; /* 3 columns * 260px + 2 gaps * 12px + padding */
+    min-width: 840px;
   }
 }
 
 .list-section {
   min-width: 260px;
-  background: var(--white);
   border-radius: 8px;
   padding: 12px;
   box-shadow: var(--shadow);
@@ -188,7 +194,7 @@
 }
 
 .modal input {
-  width: 100%;
+  width: 90%;
   padding: 8px;
   margin: 8px 0 12px;
   border: 1px solid #ccc;

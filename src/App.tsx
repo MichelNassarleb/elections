@@ -3,6 +3,8 @@ import logo from './logo.svg';
 import './App.css';
 import { initializeApp } from 'firebase/app'
 import { HomeScreen } from './screens/Home/HomeScreen';
+import { VotersScreen } from './screens/Voters/VotersScreen';
+import NavigationContainer from './NavigationContainer';
 const firebaseConfig = {
   apiKey: "AIzaSyBhpbW_0tPOa3TpgkRln67Pr22SroVuW_0",
   authDomain: "elections-1b5ba.firebaseapp.com",
@@ -19,7 +21,7 @@ function App() {
 
 
   return (
-    <HomeScreen />
+    <NavigationContainer />
   );
 }
 
