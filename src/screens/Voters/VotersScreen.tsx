@@ -103,23 +103,30 @@ export const VotersScreen = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {Object.entries(filteredVoters).map(([key, voter]) => (
-                                        <tr key={key}>
-                                            <td>{voter.first_name} {voter.last_name}</td>
-                                            <td>{voter.father_name}</td>
-                                            <td>{voter.mother_name}</td>
-                                            <td>{voter.registrat_number}</td>
-                                            <td>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={voter.has_voted === '1'}
-                                                    onChange={() => handleVoteToggle(key, voter.has_voted)}
-                                                    className="voter-checkbox"
-                                                />
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {Object.entries(filteredVoters)
+                                        .sort(([, a], [, b]) => {
+                                            const numA = parseInt(a.registrat_number, 10);
+                                            const numB = parseInt(b.registrat_number, 10);
+                                            return numA - numB;
+                                        })
+                                        .map(([key, voter]) => (
+                                            <tr key={key}>
+                                                <td>{voter.first_name} {voter.last_name}</td>
+                                                <td>{voter.father_name}</td>
+                                                <td>{voter.mother_name}</td>
+                                                <td>{voter.registrat_number}</td>
+                                                <td>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={voter.has_voted === '1'}
+                                                        onChange={() => handleVoteToggle(key, voter.has_voted)}
+                                                        className="voter-checkbox"
+                                                    />
+                                                </td>
+                                            </tr>
+                                        ))}
                                 </tbody>
+
                             </table>
                         </div>
                     )}
