@@ -110,7 +110,7 @@ export const HomeScreen = () => {
             </div>
           )}
         </div>
-        {data.length === 0 ? (
+        {Object.keys(records).length === 0 ? (
           <div className="spinner-container">
             <div className="spinner" />
           </div>
@@ -169,7 +169,7 @@ export const HomeScreen = () => {
         </div>
       )}
 
-      <div className={`column-container ${listNames.length > 2 ? 'single-column' : ''}`}>
+      <div className="column-container">
         {listNames.map(renderList)}
       </div>
     </div>
