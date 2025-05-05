@@ -14,13 +14,16 @@
   
   .column-container {
     display: flex;
-    flex-direction: column;
     gap: 40px;
+    justify-content: center;
   }
   
   .list-section {
-    width: 100%;
+    flex: 1 1 45%;
+    max-width: 45%;
   }
+  
+ 
   
   .list-header {
     display: flex;
@@ -168,3 +171,13 @@
     transform: translateY(-2px) scale(1.05);
   }
   
+  @media (max-width: 768px) {
+    .list-title {
+      font-size: 14px;
+    }
+    .group-buttons .btn {
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+  }
