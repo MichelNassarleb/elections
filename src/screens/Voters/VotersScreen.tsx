@@ -18,10 +18,7 @@ export const VotersScreen = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    // Authorization state based on localStorage
-    const [isAuthorized, setIsAuthorized] = useState(() => {
-        return localStorage.getItem('isAuthorized') === 'true';
-    });
+
     const [showModal, setShowModal] = useState(() => {
         return localStorage.getItem('isAuthorized') !== 'true';
     });
@@ -58,7 +55,6 @@ export const VotersScreen = () => {
     const handlePasswordSubmit = () => {
         if (password === '111222') {
             localStorage.setItem('isAuthorized', 'true');
-            setIsAuthorized(true);
             setShowModal(false);
             setError('');
         } else {
@@ -74,6 +70,7 @@ export const VotersScreen = () => {
                         <h2>Enter Admin Password</h2>
                         <input
                             type="password"
+                            placeholder="•••••••"
                             className="modal-input"
                             value={password}
                             autoFocus

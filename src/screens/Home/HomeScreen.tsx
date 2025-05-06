@@ -162,7 +162,7 @@ export const HomeScreen = () => {
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="Password"
+              placeholder="•••••••"
             />
             <button className="btn submit-btn" onClick={handlePasswordSubmit}>Submit</button>
           </div>
