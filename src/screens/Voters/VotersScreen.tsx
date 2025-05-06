@@ -5,6 +5,7 @@ import {
     onValue,
     update,
 } from 'firebase/database';
+import { useNavigate } from 'react-router-dom';
 import { app } from '../../App';
 import ClipLoader from 'react-spinners/ClipLoader';
 import './VotersScreen.css';
@@ -14,9 +15,18 @@ export const VotersScreen = () => {
     const [filteredVoters, setFilteredVoters] = useState<Record<string, any>>({});
     const [loading, setLoading] = useState(true);
     const [filterText, setFilterText] = useState('');
-    const [showModal, setShowModal] = useState(true);
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+
+    // Authorization state based on localStorage
+    const [isAuthorized, setIsAuthorized] = useState(() => {
+        return localStorage.getItem('isAuthorized') === 'true';
+    });
+    const [showModal, setShowModal] = useState(() => {
+        return localStorage.getItem('isAuthorized') !== 'true';
+    });
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         const db = getDatabase(app);
@@ -47,6 +57,8 @@ export const VotersScreen = () => {
 
     const handlePasswordSubmit = () => {
         if (password === '111222') {
+            localStorage.setItem('isAuthorized', 'true');
+            setIsAuthorized(true);
             setShowModal(false);
             setError('');
         } else {
@@ -110,12 +122,16 @@ export const VotersScreen = () => {
                                             return numA - numB;
                                         })
                                         .map(([key, voter]) => (
-                                            <tr key={key}>
+                                            <tr
+                                                key={key}
+                                                className="clickable-row"
+                                                onClick={() => navigate(`/vote-details/${key}`)}
+                                            >
                                                 <td>{voter.first_name} {voter.last_name}</td>
                                                 <td>{voter.father_name}</td>
                                                 <td>{voter.mother_name}</td>
                                                 <td>{voter.registrat_number}</td>
-                                                <td>
+                                                <td onClick={(e) => e.stopPropagation()}>
                                                     <input
                                                         type="checkbox"
                                                         checked={voter.has_voted === '1'}
@@ -126,7 +142,6 @@ export const VotersScreen = () => {
                                             </tr>
                                         ))}
                                 </tbody>
-
                             </table>
                         </div>
                     )}

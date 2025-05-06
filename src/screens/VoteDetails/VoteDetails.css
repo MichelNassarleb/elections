@@ -1,0 +1,110 @@
+.vote-details {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.voter-name {
+  text-align: center;
+  font-size: 26px;
+  margin-bottom: 24px;
+}
+
+.list-table {
+  margin-bottom: 40px;
+  overflow-x: auto;
+}
+
+.list-table h2 {
+  margin-bottom: 10px;
+  font-size: 20px;
+}
+
+.list-table h3 {
+  margin-top: 20px;
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: #444;
+}
+
+.list-table table {
+  width: 100%;
+  min-width: 300px;
+  border-collapse: collapse;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
+  table-layout: fixed;
+}
+
+.list-table th,
+.list-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  vertical-align: middle;
+  width: 50%;
+  word-break: break-word;
+}
+
+.list-table th:nth-child(1),
+.list-table td:nth-child(1) {
+  width: 70%;
+}
+
+.list-table th:nth-child(2),
+.list-table td:nth-child(2) {
+  width: 30%;
+  text-align: center;
+}
+
+input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+/* Responsive Tweaks */
+@media (max-width: 768px) {
+  .voter-name {
+    font-size: 22px;
+  }
+
+  .list-table table {
+    font-size: 14px;
+  }
+
+  .list-table th,
+  .list-table td {
+    padding: 10px;
+  }
+
+  .list-table th:nth-child(1),
+  .list-table td:nth-child(1) {
+    width: 65%;
+  }
+
+  .list-table th:nth-child(2),
+  .list-table td:nth-child(2) {
+    width: 35%;
+  }
+}
+
+@media (max-width: 480px) {
+  .list-table h2 {
+    font-size: 18px;
+  }
+
+  .list-table h3 {
+    font-size: 15px;
+  }
+
+  .voter-name {
+    font-size: 20px;
+  }
+
+  input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+  }
+}

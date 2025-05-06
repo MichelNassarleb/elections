@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { HomeScreen } from './screens/Home/HomeScreen';
 import { VotersScreen } from './screens/Voters/VotersScreen';
+import { VoteDetails } from './screens/VoteDetails/VoteDetails';
 
 export default function NavigationContainer() {
     return (
@@ -15,6 +16,7 @@ export default function NavigationContainer() {
                 <Routes>
                     <Route path="/" element={<HomeScreen />} />
                     <Route path="/voters" element={<VotersScreen />} />
+                    <Route path="/vote-details/:voterId" element={<VoteDetails />} />
                 </Routes>
             </div>
         </Router>

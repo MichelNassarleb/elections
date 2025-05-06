@@ -107,7 +107,12 @@
     border: 1px solid #ccc;
     box-sizing: border-box;
 }
-
+.clickable-row {
+    cursor: pointer;
+  }
+  .clickable-row:hover {
+    background-color: #f0f0f0;
+  }
 /* Modal button */
 .modal-button {
     padding: 10px;
