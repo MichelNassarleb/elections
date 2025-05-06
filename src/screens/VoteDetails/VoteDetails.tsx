@@ -51,7 +51,9 @@ const ForecastTable: React.FC<ForecastTableProps> = ({
             const diff = checked && !wasChecked ? 1 : !checked && wasChecked ? -1 : 0;
             updates[`candidatesBaladiyye/${m.key}/forecast_result_count`] = Math.max(0, current + diff);
         });
-
+        if (checked) {
+            updates[`voters/${voterId}/has_voted`] = '1';
+        }
         update(ref(db), updates);
     };
 
@@ -127,10 +129,16 @@ export const VoteDetails = () => {
         const current = candidates[key]?.forecast_result_count || 0;
         const newVal = Math.max(0, current + (isChecked ? 1 : -1));
 
-        update(ref(db), {
+        const updates: Record<string, any> = {
             [`votes/${voterId}/${key}`]: isChecked ? true : null,
             [`candidatesBaladiyye/${key}/forecast_result_count`]: newVal,
-        });
+        };
+
+        if (isChecked) {
+            updates[`voters/${voterId}/has_voted`] = '1';
+        }
+
+        update(ref(db), updates);
     };
 
     const grouped = Object.values(candidates).reduce((acc: any, candidate) => {
