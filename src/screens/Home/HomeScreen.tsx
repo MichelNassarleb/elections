@@ -138,7 +138,7 @@ export const HomeScreen = () => {
     const baladiyye = filtered.filter(([_, val]) => val.type === 'baladiyye');
 
     return (
-      <div className="list-section" key={listName}>
+      <div className="list-section" key={listName} id={`list-${listName}`}>
         <div className="list-header">
           <h2 className="list-title">List {listName}</h2>
         </div>
@@ -168,8 +168,21 @@ export const HomeScreen = () => {
           </div>
         </div>
       )}
-
-      <div className="column-container">
+      <div className="scroll-buttons">
+        {listNames.map(name => (
+          <button
+            key={name}
+            className="scroll-button"
+            onClick={() => {
+              const el = document.getElementById(`list-${name}`);
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            ⬇ List {name}
+          </button>
+        ))}
+      </div>
+      <div className="column-container" >
         {listNames.map(renderList)}
       </div>
     </div>

@@ -1,3 +1,4 @@
+/* Container */
 .voters-container {
     padding: 30px;
     font-family: Arial, sans-serif;
@@ -7,11 +8,14 @@
     box-sizing: border-box;
 }
 
+/* Title */
 .voters-title {
     margin-bottom: 10px;
     text-align: center;
+    font-size: 24px;
 }
 
+/* Search input */
 .search-input {
     padding: 10px;
     font-size: 16px;
@@ -21,14 +25,17 @@
     display: block;
     border-radius: 6px;
     border: 1px solid #ccc;
+    box-sizing: border-box;
 }
 
+/* Table container for horizontal scroll */
 .table-wrapper {
     width: 100%;
     overflow-x: auto;
     margin-top: 20px;
 }
 
+/* Table */
 .voters-table {
     width: 100%;
     border-collapse: collapse;
@@ -36,34 +43,35 @@
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    table-layout: fixed;
 }
 
+/* Table Head & Body Cells */
 .voters-table th,
 .voters-table td {
     padding: 10px;
     text-align: left;
     border-bottom: 1px solid #ddd;
     word-break: break-word;
-    white-space: nowrap;
-    max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    font-size: 14px;
 }
 
+/* Checkbox */
 .voter-checkbox {
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
     cursor: pointer;
 }
 
+/* Spinner centered */
 .spinner {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-  }
+}
 
+/* Modal background */
 .modal1 {
     position: fixed;
     top: 0;
@@ -77,17 +85,18 @@
     z-index: 9999;
 }
 
-
+/* Modal content */
 .modal-content {
     background-color: #fff;
-    padding: 30px 20px;
+    padding: 25px;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     text-align: center;
-    width: 90%;
     max-width: 350px;
+    box-sizing: border-box;
 }
 
+/* Modal input */
 .modal-input {
     padding: 10px;
     width: 100%;
@@ -96,10 +105,12 @@
     font-size: 16px;
     border-radius: 6px;
     border: 1px solid #ccc;
+    box-sizing: border-box;
 }
 
+/* Modal button */
 .modal-button {
-    padding: 10px 20px;
+    padding: 10px;
     font-size: 16px;
     background-color: #007bff;
     color: #fff;
@@ -107,9 +118,44 @@
     border-radius: 6px;
     cursor: pointer;
     width: 100%;
+    box-sizing: border-box;
 }
 
+/* Modal error */
 .modal-error {
     color: red;
     margin-top: 10px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 480px) {
+    .voters-title {
+        font-size: 20px;
+    }
+
+    .search-input {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    .voters-table th,
+    .voters-table td {
+        font-size: 10px;
+        padding: 8px;
+    }
+
+    .voter-checkbox {
+        width: 20px;
+        height: 20px;
+    }
+
+    .modal-content {
+        padding: 20px;
+    }
+
+    .modal-input,
+    .modal-button {
+        font-size: 14px;
+        padding: 8px;
+    }
 }
