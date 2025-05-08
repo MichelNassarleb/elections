@@ -4,6 +4,7 @@ import { HomeScreen } from './screens/Home/HomeScreen';
 import { VotersScreen } from './screens/Voters/VotersScreen';
 import { VoteDetails } from './screens/VoteDetails/VoteDetails';
 import { ForecastResults } from './screens/ForecastResults/ForecastResults';
+import { NonVotersScreen } from './screens/NonVoters/NonVoters';
 
 export default function NavigationContainer() {
     return (
@@ -11,6 +12,7 @@ export default function NavigationContainer() {
             <div style={styles.navbar}>
                 <Link to="/" style={styles.link}>🏠 Home</Link>
                 <Link to="/voters" style={styles.link}>🗳️ Voters</Link>
+                <Link to="/non-voters" style={styles.link}>🚫 Non Voters</Link>
                 <Link to="/forecast-results" style={styles.link}>📊 Forecast Results</Link>
             </div>
 
@@ -18,6 +20,7 @@ export default function NavigationContainer() {
                 <Routes>
                     <Route path="/" element={<HomeScreen />} />
                     <Route path="/voters" element={<VotersScreen />} />
+                    <Route path="/non-voters" element={<NonVotersScreen />} />
                     <Route path="/vote-details/:voterId" element={<VoteDetails />} />
                     <Route path="/forecast-results" element={<ForecastResults />} />
                 </Routes>
