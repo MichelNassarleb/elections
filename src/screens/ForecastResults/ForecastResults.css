@@ -133,4 +133,13 @@
     margin-top: 8px;
     font-size: 14px;
   }
+  .chart-wrapper {
+    margin-bottom: 40px;
+  }
+  
+  .chart-title {
+    font-size: 20px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
   
