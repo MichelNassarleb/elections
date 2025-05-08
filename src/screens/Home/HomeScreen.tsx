@@ -159,43 +159,44 @@ export const HomeScreen = () => {
     .sort((a, b) => b.count - a.count);
 
   return (
-    <div className="homescreen">
-      <h1 className="title">Candidates</h1>
+    <>
+      <div className="homescreen">
+        <h1 className="title">Candidates</h1>
 
-      {showPasswordModal && (
-        <div className="modal-backdrop">
-          <div className="modal">
-            <h2>Enter Admin Password</h2>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="•••••••"
-            />
-            <button className="btn submit-btn" onClick={handlePasswordSubmit}>Submit</button>
+        {showPasswordModal && (
+          <div className="modal-backdrop">
+            <div className="modal">
+              <h2>Enter Admin Password</h2>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="•••••••"
+              />
+              <button className="btn submit-btn" onClick={handlePasswordSubmit}>Submit</button>
+            </div>
           </div>
+        )}
+
+        <div className="scroll-buttons">
+          {listNames.map(name => (
+            <button
+              key={name}
+              className="scroll-button"
+              onClick={() => {
+                const el = document.getElementById(`list-${name}`);
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
+              ⬇ List {name}
+            </button>
+          ))}
         </div>
-      )}
 
-      <div className="scroll-buttons">
-        {listNames.map(name => (
-          <button
-            key={name}
-            className="scroll-button"
-            onClick={() => {
-              const el = document.getElementById(`list-${name}`);
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
-          >
-            ⬇ List {name}
-          </button>
-        ))}
+        <div className="column-container">
+          {listNames.map(renderList)}
+        </div>
       </div>
-
-      <div className="column-container">
-        {listNames.map(renderList)}
-      </div>
-
       {/* Horizontal bar charts (vertical layout) */}
       <div className="chart-wrapper">
         <h2 className="chart-title">Makhtara Chart</h2>
@@ -215,7 +216,6 @@ export const HomeScreen = () => {
           </BarChart>
         </ResponsiveContainer>
       </div>
-
       <div className="chart-wrapper">
         <h2 className="chart-title">Baladiyye Chart</h2>
         <ResponsiveContainer width="100%" height={Math.max(300, baladiyyeData.length * 50)}>
@@ -234,6 +234,6 @@ export const HomeScreen = () => {
           </BarChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </>
   );
 };
