@@ -85,11 +85,11 @@ export const ForecastResults = () => {
 
           <div className="chart-wrapper">
             <h2 className="chart-title">Makhtara Forecast</h2>
-            <ResponsiveContainer width="100%" height={Math.max(300, makhtaraData.length * 40)}>
+            <ResponsiveContainer width="100%" height={Math.max(300, makhtaraData.length * 50)}>
               <BarChart data={makhtaraData} layout="vertical" margin={{ top: 20, right: 30, left: 40, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={150} />
+                <YAxis dataKey="name" type="category" />
                 <Tooltip />
                 <Bar dataKey="votes" fill="#28a745">
                   <LabelList dataKey="votes" position="right" />
@@ -100,11 +100,11 @@ export const ForecastResults = () => {
 
           <div className="chart-wrapper">
             <h2 className="chart-title">Baladiyye Forecast</h2>
-            <ResponsiveContainer width="100%" height={Math.max(300, baladiyyeData.length * 40)}>
+            <ResponsiveContainer width="100%" height={Math.max(300, baladiyyeData.length * 50)}>
               <BarChart data={baladiyyeData} layout="vertical" margin={{ top: 20, right: 30, left: 40, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={150} />
+                <YAxis dataKey="name" type="category" />
                 <Tooltip />
                 <Bar dataKey="votes" fill="#007bff">
                   <LabelList dataKey="votes" position="right" />

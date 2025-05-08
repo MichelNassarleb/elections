@@ -8,7 +8,6 @@ import {
   get,
   update,
 } from 'firebase/database';
-
 import {
   BarChart,
   Bar,
@@ -47,17 +46,11 @@ export const HomeScreen = () => {
     });
 
     onChildAdded(recordsRef, snapshot => {
-      setRecords(prev => ({
-        ...prev,
-        [snapshot.key!]: snapshot.val(),
-      }));
+      setRecords(prev => ({ ...prev, [snapshot.key!]: snapshot.val() }));
     });
 
     onChildChanged(recordsRef, snapshot => {
-      setRecords(prev => ({
-        ...prev,
-        [snapshot.key!]: snapshot.val(),
-      }));
+      setRecords(prev => ({ ...prev, [snapshot.key!]: snapshot.val() }));
     });
 
     onChildRemoved(recordsRef, snapshot => {
@@ -77,18 +70,16 @@ export const HomeScreen = () => {
     update(ref(db, `/candidatesBaladiyye/${key}`), { count: updatedCount });
   };
 
-  const updateGroupCountByType = (listValue: string, type: 'makhtara' | 'baladiyye', delta: number) => {
+  const updateGroupCountByType = (list: string, type: 'makhtara' | 'baladiyye', delta: number) => {
     if (!isAuthorized) return;
     const db = getDatabase(app);
     const updates: Record<string, any> = {};
-
-    Object.entries(records).forEach(([key, value]) => {
-      if (value.list === listValue && value.type === type) {
-        const currentCount = value.count || 0;
-        updates[`/candidatesBaladiyye/${key}/count`] = Math.max(0, currentCount + delta);
+    Object.entries(records).forEach(([key, val]) => {
+      if (val.list === list && val.type === type) {
+        const current = val.count || 0;
+        updates[`/candidatesBaladiyye/${key}/count`] = Math.max(0, current + delta);
       }
     });
-
     update(ref(db), updates);
   };
 
@@ -103,47 +94,41 @@ export const HomeScreen = () => {
     title: 'Makhtara' | 'Baladiyye',
     data: [string, RecordType][],
     listName: string
-  ) => {
-    return (
-      <div className="subsection">
-        <div className="subsection-header">
-          <h3 className="subsection-title">{title}</h3>
+  ) => (
+    <div className="subsection">
+      <div className="subsection-header">
+        <h3 className="subsection-title">{title}</h3>
+        {isAuthorized && (
+          <div className="group-buttons">
+            <button
+              className="btn plus"
+              onClick={() => updateGroupCountByType(listName, title.toLowerCase() as any, 1)}
+            >
+              + All
+            </button>
+            <button
+              className="btn minus"
+              onClick={() => updateGroupCountByType(listName, title.toLowerCase() as any, -1)}
+            >
+              - All
+            </button>
+          </div>
+        )}
+      </div>
+      {data.map(([key, value]) => (
+        <div className="card" key={key}>
+          <h3 className="name">{value.name}</h3>
+          <p className="count">Count: {value.count || 0}</p>
           {isAuthorized && (
-            <div className="group-buttons">
-              <button
-                className="btn plus"
-                onClick={() =>
-                  updateGroupCountByType(listName, title.toLowerCase() as 'makhtara' | 'baladiyye', 1)
-                }
-              >
-                + All
-              </button>
-              <button
-                className="btn minus"
-                onClick={() =>
-                  updateGroupCountByType(listName, title.toLowerCase() as 'makhtara' | 'baladiyye', -1)
-                }
-              >
-                - All
-              </button>
+            <div className="buttons">
+              <button className="btn plus" onClick={() => updateCount(key, 1)}>+</button>
+              <button className="btn minus" onClick={() => updateCount(key, -1)}>-</button>
             </div>
           )}
         </div>
-        {data.map(([key, value]) => (
-          <div className="card" key={key}>
-            <h3 className="name">{value.name}</h3>
-            <p className="count">Count: {value.count || 0}</p>
-            {isAuthorized && (
-              <div className="buttons">
-                <button className="btn plus" onClick={() => updateCount(key, 1)}>+</button>
-                <button className="btn minus" onClick={() => updateCount(key, -1)}>-</button>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
+      ))}
+    </div>
+  );
 
   const renderList = (listName: string) => {
     const filtered = Object.entries(records).filter(([_, val]) => val.list === listName);
@@ -164,13 +149,13 @@ export const HomeScreen = () => {
   const listNames = Array.from(new Set(Object.values(records).map(r => r.list))).sort();
 
   const makhtaraData = Object.values(records)
-    .filter((item) => item.type === 'makhtara')
-    .map((item) => ({ name: item.name, count: item.count || 0 }))
+    .filter(r => r.type === 'makhtara')
+    .map(r => ({ name: r.name, count: r.count || 0 }))
     .sort((a, b) => b.count - a.count);
 
   const baladiyyeData = Object.values(records)
-    .filter((item) => item.type === 'baladiyye')
-    .map((item) => ({ name: item.name, count: item.count || 0 }))
+    .filter(r => r.type === 'baladiyye')
+    .map(r => ({ name: r.name, count: r.count || 0 }))
     .sort((a, b) => b.count - a.count);
 
   return (
@@ -211,18 +196,18 @@ export const HomeScreen = () => {
         {listNames.map(renderList)}
       </div>
 
-      {/* Vertical charts at bottom */}
+      {/* Horizontal bar charts (vertical layout) */}
       <div className="chart-wrapper">
         <h2 className="chart-title">Makhtara Chart</h2>
-        <ResponsiveContainer width="100%" height={Math.max(300, makhtaraData.length * 40)}>
+        <ResponsiveContainer width="100%" height={Math.max(300, makhtaraData.length * 50)}>
           <BarChart
             data={makhtaraData}
             layout="vertical"
-            margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
+            margin={{ top: 20, right: 20, left: 40, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis type="number" />
-            <YAxis dataKey="name" type="category" width={150} />
+            <YAxis dataKey="name" type="category" />
             <Tooltip />
             <Bar dataKey="count" fill="#28a745">
               <LabelList dataKey="count" position="right" />
@@ -233,15 +218,15 @@ export const HomeScreen = () => {
 
       <div className="chart-wrapper">
         <h2 className="chart-title">Baladiyye Chart</h2>
-        <ResponsiveContainer width="100%" height={Math.max(300, baladiyyeData.length * 40)}>
+        <ResponsiveContainer width="100%" height={Math.max(300, baladiyyeData.length * 50)}>
           <BarChart
             data={baladiyyeData}
             layout="vertical"
-            margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
+            margin={{ top: 20, right: 20, left: 40, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis type="number" />
-            <YAxis dataKey="name" type="category" width={150} />
+            <YAxis dataKey="name" type="category" />
             <Tooltip />
             <Bar dataKey="count" fill="#007bff">
               <LabelList dataKey="count" position="right" />
