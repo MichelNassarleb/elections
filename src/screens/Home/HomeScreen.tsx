@@ -6,8 +6,19 @@ import {
   onChildChanged,
   onChildRemoved,
   get,
-  update
+  update,
 } from 'firebase/database';
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LabelList,
+} from 'recharts';
 
 import './HomeScreen.css';
 import { app } from '../../App';
@@ -88,7 +99,11 @@ export const HomeScreen = () => {
     setShowPasswordModal(false);
   };
 
-  const renderSection = (title: 'Makhtara' | 'Baladiyye', data: [string, RecordType][], listName: string) => {
+  const renderSection = (
+    title: 'Makhtara' | 'Baladiyye',
+    data: [string, RecordType][],
+    listName: string
+  ) => {
     return (
       <div className="subsection">
         <div className="subsection-header">
@@ -97,37 +112,35 @@ export const HomeScreen = () => {
             <div className="group-buttons">
               <button
                 className="btn plus"
-                onClick={() => updateGroupCountByType(listName, title.toLowerCase() as 'makhtara' | 'baladiyye', 1)}
+                onClick={() =>
+                  updateGroupCountByType(listName, title.toLowerCase() as 'makhtara' | 'baladiyye', 1)
+                }
               >
                 + All
               </button>
               <button
                 className="btn minus"
-                onClick={() => updateGroupCountByType(listName, title.toLowerCase() as 'makhtara' | 'baladiyye', -1)}
+                onClick={() =>
+                  updateGroupCountByType(listName, title.toLowerCase() as 'makhtara' | 'baladiyye', -1)
+                }
               >
                 - All
               </button>
             </div>
           )}
         </div>
-        {Object.keys(records).length === 0 ? (
-          <div className="spinner-container">
-            <div className="spinner" />
+        {data.map(([key, value]) => (
+          <div className="card" key={key}>
+            <h3 className="name">{value.name}</h3>
+            <p className="count">Count: {value.count || 0}</p>
+            {isAuthorized && (
+              <div className="buttons">
+                <button className="btn plus" onClick={() => updateCount(key, 1)}>+</button>
+                <button className="btn minus" onClick={() => updateCount(key, -1)}>-</button>
+              </div>
+            )}
           </div>
-        ) : (
-          data.map(([key, value]) => (
-            <div className="card" key={key}>
-              <h3 className="name">{value.name}</h3>
-              <p className="count">Count: {value.count || 0}</p>
-              {isAuthorized && (
-                <div className="buttons">
-                  <button className="btn plus" onClick={() => updateCount(key, 1)}>+</button>
-                  <button className="btn minus" onClick={() => updateCount(key, -1)}>-</button>
-                </div>
-              )}
-            </div>
-          ))
-        )}
+        ))}
       </div>
     );
   };
@@ -150,6 +163,16 @@ export const HomeScreen = () => {
 
   const listNames = Array.from(new Set(Object.values(records).map(r => r.list))).sort();
 
+  const makhtaraData = Object.values(records)
+    .filter((item) => item.type === 'makhtara')
+    .map((item) => ({ name: item.name, count: item.count || 0 }))
+    .sort((a, b) => b.count - a.count);
+
+  const baladiyyeData = Object.values(records)
+    .filter((item) => item.type === 'baladiyye')
+    .map((item) => ({ name: item.name, count: item.count || 0 }))
+    .sort((a, b) => b.count - a.count);
+
   return (
     <div className="homescreen">
       <h1 className="title">Candidates</h1>
@@ -168,6 +191,7 @@ export const HomeScreen = () => {
           </div>
         </div>
       )}
+
       <div className="scroll-buttons">
         {listNames.map(name => (
           <button
@@ -182,8 +206,48 @@ export const HomeScreen = () => {
           </button>
         ))}
       </div>
-      <div className="column-container" >
+
+      <div className="column-container">
         {listNames.map(renderList)}
+      </div>
+
+      {/* Vertical charts at bottom */}
+      <div className="chart-wrapper">
+        <h2 className="chart-title">Makhtara Chart</h2>
+        <ResponsiveContainer width="100%" height={Math.max(300, makhtaraData.length * 40)}>
+          <BarChart
+            data={makhtaraData}
+            layout="vertical"
+            margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis type="number" />
+            <YAxis dataKey="name" type="category" width={150} />
+            <Tooltip />
+            <Bar dataKey="count" fill="#28a745">
+              <LabelList dataKey="count" position="right" />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="chart-wrapper">
+        <h2 className="chart-title">Baladiyye Chart</h2>
+        <ResponsiveContainer width="100%" height={Math.max(300, baladiyyeData.length * 40)}>
+          <BarChart
+            data={baladiyyeData}
+            layout="vertical"
+            margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis type="number" />
+            <YAxis dataKey="name" type="category" width={150} />
+            <Tooltip />
+            <Bar dataKey="count" fill="#007bff">
+              <LabelList dataKey="count" position="right" />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
