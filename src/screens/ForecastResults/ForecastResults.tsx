@@ -89,7 +89,7 @@ export const ForecastResults = () => {
               <BarChart data={makhtaraData} layout="vertical" margin={{ top: 20, right: 30, left: 40, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" />
-                <YAxis dataKey="name" type="category" />
+                <YAxis width={30} dataKey="name" type="category" />
                 <Tooltip />
                 <Bar dataKey="votes" fill="#28a745">
                   <LabelList dataKey="votes" position="right" />
@@ -104,7 +104,7 @@ export const ForecastResults = () => {
               <BarChart data={baladiyyeData} layout="vertical" margin={{ top: 20, right: 30, left: 40, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" />
-                <YAxis dataKey="name" type="category" />
+                <YAxis width={30} dataKey="name" type="category" />
                 <Tooltip />
                 <Bar dataKey="votes" fill="#007bff">
                   <LabelList dataKey="votes" position="right" />

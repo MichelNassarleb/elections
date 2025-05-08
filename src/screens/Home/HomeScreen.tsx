@@ -208,7 +208,7 @@ export const HomeScreen = () => {
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis type="number" />
-            <YAxis dataKey="name" type="category" />
+            <YAxis width={30} dataKey="name" type="category" />
             <Tooltip />
             <Bar dataKey="count" fill="#28a745">
               <LabelList dataKey="count" position="right" />
@@ -226,7 +226,7 @@ export const HomeScreen = () => {
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis type="number" />
-            <YAxis dataKey="name" type="category" />
+            <YAxis width={30} dataKey="name" type="category" />
             <Tooltip />
             <Bar dataKey="count" fill="#007bff">
               <LabelList dataKey="count" position="right" />
