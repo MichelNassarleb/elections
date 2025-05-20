@@ -17,6 +17,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   LabelList,
+  Cell,
 } from 'recharts';
 
 import './HomeScreen.css';
@@ -40,9 +41,7 @@ export const HomeScreen = () => {
     const recordsRef = ref(db, '/candidatesBaladiyye');
 
     get(recordsRef).then(snapshot => {
-      if (snapshot.exists()) {
-        setRecords(snapshot.val());
-      }
+      if (snapshot.exists()) setRecords(snapshot.val());
     });
 
     onChildAdded(recordsRef, snapshot => {
@@ -70,92 +69,92 @@ export const HomeScreen = () => {
     update(ref(db, `/candidatesBaladiyye/${key}`), { count: updatedCount });
   };
 
-  const updateGroupCountByType = (list: string, type: 'makhtara' | 'baladiyye', delta: number) => {
-    if (!isAuthorized) return;
-    const db = getDatabase(app);
-    const updates: Record<string, any> = {};
-    Object.entries(records).forEach(([key, val]) => {
-      if (val.list === list && val.type === type) {
-        const current = val.count || 0;
-        updates[`/candidatesBaladiyye/${key}/count`] = Math.max(0, current + delta);
-      }
-    });
-    update(ref(db), updates);
-  };
-
   const handlePasswordSubmit = () => {
-    if (password === '111222') {
-      setIsAuthorized(true);
-    }
+    if (password === '111222') setIsAuthorized(true);
     setShowPasswordModal(false);
-  };
-
-  const renderSection = (
-    title: 'Makhtara' | 'Baladiyye',
-    data: [string, RecordType][],
-    listName: string
-  ) => (
-    <div className="subsection">
-      <div className="subsection-header">
-        <h3 className="subsection-title">{title}</h3>
-        {isAuthorized && (
-          <div className="group-buttons">
-            <button
-              className="btn plus"
-              onClick={() => updateGroupCountByType(listName, title.toLowerCase() as any, 1)}
-            >
-              + All
-            </button>
-            <button
-              className="btn minus"
-              onClick={() => updateGroupCountByType(listName, title.toLowerCase() as any, -1)}
-            >
-              - All
-            </button>
-          </div>
-        )}
-      </div>
-      {data.map(([key, value]) => (
-        <div className="card" key={key}>
-          <h3 className="name">{value.name}</h3>
-          <p className="count">Count: {value.count || 0}</p>
-          {isAuthorized && (
-            <div className="buttons">
-              <button className="btn plus" onClick={() => updateCount(key, 1)}>+</button>
-              <button className="btn minus" onClick={() => updateCount(key, -1)}>-</button>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderList = (listName: string) => {
-    const filtered = Object.entries(records).filter(([_, val]) => val.list === listName);
-    const makhtara = filtered.filter(([_, val]) => val.type === 'makhtara');
-    const baladiyye = filtered.filter(([_, val]) => val.type === 'baladiyye');
-
-    return (
-      <div className="list-section" key={listName} id={`list-${listName}`}>
-        <div className="list-header">
-          <h2 className="list-title">List {listName}</h2>
-        </div>
-        {renderSection('Makhtara', makhtara, listName)}
-        {renderSection('Baladiyye', baladiyye, listName)}
-      </div>
-    );
   };
 
   const listNames = Array.from(new Set(Object.values(records).map(r => r.list))).sort();
 
+  const handleIncrementAll = (type: 'makhtara' | 'baladiyye', list: string) => {
+    const filtered = Object.entries(records).filter(
+      ([, val]) => val.type === type && val.list === list
+    );
+    filtered.forEach(([key]) => {
+      updateCount(key, 1);
+    });
+    if (navigator.vibrate) navigator.vibrate(100);
+  };
+
+  const renderListRow = (type: 'makhtara' | 'baladiyye', listName: string) => {
+    const data = [...Object.entries(records).filter(
+      ([, val]) => val.list === listName && val.type === type
+    ), ...Object.entries(records).filter(
+      ([, val]) => val.list === listName && val.type === type
+    ), ...Object.entries(records).filter(
+      ([, val]) => val.list === listName && val.type === type
+    )]
+
+    if (data.length === 0) return null;
+
+    return (
+      <div className="list-row" key={`${type}-${listName}`}>
+        <div className="list-header">
+          <h4>{type} - List {listName}</h4>
+          {isAuthorized && (
+            <button
+              className="btn small-all"
+              onClick={() => handleIncrementAll(type, listName)}
+            >
+              + All
+            </button>
+          )}
+        </div>
+        <div className="row-flex">
+          {data.map(([key, value]) => (
+            <div className="candidate-box" key={key}>
+              <span
+                className="candidate-name"
+                onClick={() => {
+                  updateCount(key, 1);
+                  if (navigator.vibrate) navigator.vibrate(50);
+                }}
+              >
+                {value.name}
+              </span>
+              <div className="button-group horizontal">
+                <button
+                  className="big-btn plus"
+                  onClick={() => {
+                    updateCount(key, 1);
+                    if (navigator.vibrate) navigator.vibrate(50);
+                  }}
+                >
+                  +
+                </button>
+                <span className="candidate-count">{value.count || 0}</span>
+                <button
+                  className="big-btn minus"
+                  onClick={() => updateCount(key, -1)}
+                >
+                  –
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const makhtaraData = Object.values(records)
     .filter(r => r.type === 'makhtara')
-    .map(r => ({ name: r.name, count: r.count || 0 }))
+    .map(r => ({ name: r.name, count: r.count || 0, list: r.list }))
     .sort((a, b) => b.count - a.count);
 
   const baladiyyeData = Object.values(records)
     .filter(r => r.type === 'baladiyye')
-    .map(r => ({ name: r.name, count: r.count || 0 }))
+    .map(r => ({ name: r.name, count: r.count || 0, list: r.list }))
     .sort((a, b) => b.count - a.count);
 
   return (
@@ -178,58 +177,45 @@ export const HomeScreen = () => {
           </div>
         )}
 
-        <div className="scroll-buttons">
-          {listNames.map(name => (
-            <button
-              key={name}
-              className="scroll-button"
-              onClick={() => {
-                const el = document.getElementById(`list-${name}`);
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
-            >
-              ⬇ List {name}
-            </button>
-          ))}
-        </div>
-
-        <div className="column-container">
-          {listNames.map(renderList)}
+        <div className="list-block">
+          {listNames.map(name => renderListRow('makhtara', name))}
+          {listNames.map(name => renderListRow('baladiyye', name))}
         </div>
       </div>
-      {/* Horizontal bar charts (vertical layout) */}
+
+      {/* Makhtara Chart */}
       <div className="chart-wrapper">
         <h2 className="chart-title">Makhtara Chart</h2>
-        <ResponsiveContainer width="100%" height={Math.max(300, makhtaraData.length * 50)}>
-          <BarChart
-            data={makhtaraData}
-            layout="vertical"
-            margin={{ top: 20, right: 20, left: 40, bottom: 5 }}
-          >
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={makhtaraData} margin={{ top: 20, right: 20, left: 20, bottom: 80 }}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" />
-            <YAxis width={30} dataKey="name" type="category" />
+            <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} />
+            <YAxis />
             <Tooltip />
-            <Bar dataKey="count" fill="#28a745">
-              <LabelList dataKey="count" position="right" />
+            <Bar dataKey="count" isAnimationActive={false}>
+              {makhtaraData.map((entry, index) => (
+                <Cell key={`m-cell-${index}`} fill={entry.list === '1' ? '#e53935' : '#fdd835'} />
+              ))}
+              <LabelList dataKey="count" position="top" />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Baladiyye Chart */}
       <div className="chart-wrapper">
         <h2 className="chart-title">Baladiyye Chart</h2>
-        <ResponsiveContainer width="100%" height={Math.max(300, baladiyyeData.length * 50)}>
-          <BarChart
-            data={baladiyyeData}
-            layout="vertical"
-            margin={{ top: 20, right: 20, left: 40, bottom: 5 }}
-          >
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={baladiyyeData} margin={{ top: 20, right: 20, left: 20, bottom: 80 }}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" />
-            <YAxis width={30} dataKey="name" type="category" />
+            <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} />
+            <YAxis />
             <Tooltip />
-            <Bar dataKey="count" fill="#007bff">
-              <LabelList dataKey="count" position="right" />
+            <Bar dataKey="count" isAnimationActive={false}>
+              {baladiyyeData.map((entry, index) => (
+                <Cell key={`b-cell-${index}`} fill={entry.list === '1' ? '#e53935' : '#fdd835'} />
+              ))}
+              <LabelList dataKey="count" position="top" />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
