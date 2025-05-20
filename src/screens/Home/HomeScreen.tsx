@@ -87,27 +87,31 @@ export const HomeScreen = () => {
   };
 
   const renderListRow = (type: 'makhtara' | 'baladiyye', listName: string) => {
-    const data = [...Object.entries(records).filter(
+    const data = Object.entries(records).filter(
       ([, val]) => val.list === listName && val.type === type
-    ), ...Object.entries(records).filter(
-      ([, val]) => val.list === listName && val.type === type
-    ), ...Object.entries(records).filter(
-      ([, val]) => val.list === listName && val.type === type
-    )]
+    );
 
     if (data.length === 0) return null;
 
+    const incrementAll = () => {
+      data.forEach(([key]) => updateCount(key, 1));
+      if (navigator.vibrate) navigator.vibrate(100);
+    };
+
+    const decrementAll = () => {
+      data.forEach(([key]) => updateCount(key, -1));
+      if (navigator.vibrate) navigator.vibrate(100);
+    };
+
     return (
       <div className="list-row" key={`${type}-${listName}`}>
-        <div className="list-header">
-          <h4>{type} - List {listName}</h4>
+        <div className="list-title-bar">
+          <h4 className="list-title">{type} - List {listName}</h4>
           {isAuthorized && (
-            <button
-              className="btn small-all"
-              onClick={() => handleIncrementAll(type, listName)}
-            >
-              + All
-            </button>
+            <div className="all-buttons">
+              <button className="btn small-all plus-all" onClick={incrementAll}>+ All</button>
+              <button className="btn small-all minus-all" onClick={decrementAll}>– All</button>
+            </div>
           )}
         </div>
         <div className="row-flex">
@@ -124,6 +128,13 @@ export const HomeScreen = () => {
               </span>
               <div className="button-group horizontal">
                 <button
+                  className="big-btn minus"
+                  onClick={() => updateCount(key, -1)}
+                >
+                  –
+                </button>
+                <span className="candidate-count">{value.count || 0}</span>
+                <button
                   className="big-btn plus"
                   onClick={() => {
                     updateCount(key, 1);
@@ -132,13 +143,6 @@ export const HomeScreen = () => {
                 >
                   +
                 </button>
-                <span className="candidate-count">{value.count || 0}</span>
-                <button
-                  className="big-btn minus"
-                  onClick={() => updateCount(key, -1)}
-                >
-                  –
-                </button>
               </div>
             </div>
           ))}
@@ -146,6 +150,7 @@ export const HomeScreen = () => {
       </div>
     );
   };
+
 
   const makhtaraData = Object.values(records)
     .filter(r => r.type === 'makhtara')
