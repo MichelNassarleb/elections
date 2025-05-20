@@ -7,6 +7,7 @@ import {
   onChildRemoved,
   get,
   update,
+  onValue,
 } from 'firebase/database';
 import {
   BarChart,
@@ -30,11 +31,19 @@ type RecordType = {
   type: 'makhtara' | 'baladiyye';
 };
 
+type UpdateAction = {
+  key: string;
+  delta: number;
+};
+
 export const HomeScreen = () => {
   const [records, setRecords] = useState<Record<string, RecordType>>({});
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(true);
   const [password, setPassword] = useState('');
+
+  const pendingUpdates: UpdateAction[] = [];
+  const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
     const db = getDatabase(app);
@@ -59,14 +68,53 @@ export const HomeScreen = () => {
         return updated;
       });
     });
+
+    // Firebase connection monitoring
+    const connRef = ref(db, '.info/connected');
+    const unsubscribe = onValue(connRef, (snap) => {
+      const connected = !!snap.val();
+      setIsOnline(connected);
+      if (connected) {
+        processPendingUpdates();
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
+
+  const vibrate = (ms = 50) => {
+    if (navigator.vibrate) navigator.vibrate(ms);
+  };
 
   const updateCount = (key: string, delta: number) => {
     if (!isAuthorized) return;
+
     const db = getDatabase(app);
-    const currentCount = records[key]?.count || 0;
-    const updatedCount = Math.max(0, currentCount + delta);
-    update(ref(db, `/candidatesBaladiyye/${key}`), { count: updatedCount });
+    const current = records[key]?.count || 0;
+    const updatedCount = Math.max(0, current + delta);
+
+    update(ref(db, `/candidatesBaladiyye/${key}`), { count: updatedCount })
+      .catch(() => {
+        // Queue the update on failure
+        console.warn('Offline, queuing update:', key, delta);
+        pendingUpdates.push({ key, delta });
+      });
+  };
+
+  const processPendingUpdates = () => {
+    const merged: Record<string, number> = {};
+
+    for (const { key, delta } of pendingUpdates) {
+      merged[key] = (merged[key] || 0) + delta;
+    }
+
+    pendingUpdates.length = 0; // clear the queue before retry
+
+    for (const key in merged) {
+      if (merged[key] !== 0) {
+        updateCount(key, merged[key]);
+      }
+    }
   };
 
   const handlePasswordSubmit = () => {
@@ -75,16 +123,6 @@ export const HomeScreen = () => {
   };
 
   const listNames = Array.from(new Set(Object.values(records).map(r => r.list))).sort();
-
-  const handleIncrementAll = (type: 'makhtara' | 'baladiyye', list: string) => {
-    const filtered = Object.entries(records).filter(
-      ([, val]) => val.type === type && val.list === list
-    );
-    filtered.forEach(([key]) => {
-      updateCount(key, 1);
-    });
-    if (navigator.vibrate) navigator.vibrate(100);
-  };
 
   const renderListRow = (type: 'makhtara' | 'baladiyye', listName: string) => {
     const data = Object.entries(records).filter(
@@ -95,12 +133,12 @@ export const HomeScreen = () => {
 
     const incrementAll = () => {
       data.forEach(([key]) => updateCount(key, 1));
-      if (navigator.vibrate) navigator.vibrate(100);
+      vibrate(100);
     };
 
     const decrementAll = () => {
       data.forEach(([key]) => updateCount(key, -1));
-      if (navigator.vibrate) navigator.vibrate(100);
+      vibrate(100);
     };
 
     return (
@@ -121,28 +159,15 @@ export const HomeScreen = () => {
                 className="candidate-name"
                 onClick={() => {
                   updateCount(key, 1);
-                  if (navigator.vibrate) navigator.vibrate(50);
+                  vibrate();
                 }}
               >
                 {value.name}
               </span>
               <div className="button-group horizontal">
-                <button
-                  className="big-btn minus"
-                  onClick={() => updateCount(key, -1)}
-                >
-                  –
-                </button>
+                <button className="big-btn minus" onClick={() => { updateCount(key, -1); vibrate(); }}>–</button>
                 <span className="candidate-count">{value.count || 0}</span>
-                <button
-                  className="big-btn plus"
-                  onClick={() => {
-                    updateCount(key, 1);
-                    if (navigator.vibrate) navigator.vibrate(50);
-                  }}
-                >
-                  +
-                </button>
+                <button className="big-btn plus" onClick={() => { updateCount(key, 1); vibrate(); }}>+</button>
               </div>
             </div>
           ))}
@@ -150,7 +175,6 @@ export const HomeScreen = () => {
       </div>
     );
   };
-
 
   const makhtaraData = Object.values(records)
     .filter(r => r.type === 'makhtara')
