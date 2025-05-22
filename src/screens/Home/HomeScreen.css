@@ -429,7 +429,9 @@ body {
   margin-top: 20px;
   gap: 8px;
 }
-
+.none{
+  display: none;
+}
 .list-title {
   font-size: 14px;
   color: #444;

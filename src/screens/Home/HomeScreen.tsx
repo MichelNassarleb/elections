@@ -38,10 +38,9 @@ type UpdateAction = {
 
 export const HomeScreen = () => {
   const [records, setRecords] = useState<Record<string, RecordType>>({});
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [accessLevel, setAccessLevel] = useState<'full' | 'makhtara' | 'baladiyye' | 'chartsOnly' | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(true);
   const [password, setPassword] = useState('');
-
   const pendingUpdates: UpdateAction[] = [];
   const [isOnline, setIsOnline] = useState(true);
 
@@ -69,7 +68,6 @@ export const HomeScreen = () => {
       });
     });
 
-    // Firebase connection monitoring
     const connRef = ref(db, '.info/connected');
     const unsubscribe = onValue(connRef, (snap) => {
       const connected = !!snap.val();
@@ -87,7 +85,13 @@ export const HomeScreen = () => {
   };
 
   const updateCount = (key: string, delta: number) => {
-    if (!isAuthorized) return;
+    const type = records[key]?.type;
+    if (
+      !accessLevel ||
+      accessLevel === 'chartsOnly' ||
+      (accessLevel === 'makhtara' && type !== 'makhtara') ||
+      (accessLevel === 'baladiyye' && type !== 'baladiyye')
+    ) return;
 
     const db = getDatabase(app);
     const current = records[key]?.count || 0;
@@ -95,7 +99,6 @@ export const HomeScreen = () => {
 
     update(ref(db, `/candidatesBaladiyye/${key}`), { count: updatedCount })
       .catch(() => {
-        // Queue the update on failure
         console.warn('Offline, queuing update:', key, delta);
         pendingUpdates.push({ key, delta });
       });
@@ -103,13 +106,10 @@ export const HomeScreen = () => {
 
   const processPendingUpdates = () => {
     const merged: Record<string, number> = {};
-
     for (const { key, delta } of pendingUpdates) {
       merged[key] = (merged[key] || 0) + delta;
     }
-
-    pendingUpdates.length = 0; // clear the queue before retry
-
+    pendingUpdates.length = 0;
     for (const key in merged) {
       if (merged[key] !== 0) {
         updateCount(key, merged[key]);
@@ -118,13 +118,35 @@ export const HomeScreen = () => {
   };
 
   const handlePasswordSubmit = () => {
-    if (password === '111222') setIsAuthorized(true);
+    switch (password) {
+      case '111222':
+        setAccessLevel('full');
+        break;
+      case '123456':
+        setAccessLevel('makhtara');
+        break;
+      case '654321':
+        setAccessLevel('baladiyye');
+        break;
+      case '999000':
+        setAccessLevel('chartsOnly');
+        break;
+      default:
+        setAccessLevel(null);
+    }
     setShowPasswordModal(false);
   };
 
   const listNames = Array.from(new Set(Object.values(records).map(r => r.list))).sort();
 
   const renderListRow = (type: 'makhtara' | 'baladiyye', listName: string) => {
+    if (
+      accessLevel === 'chartsOnly' ||
+      (type === 'makhtara' && accessLevel === 'baladiyye') ||
+      (type === 'baladiyye' && accessLevel === 'makhtara') ||
+      accessLevel === null
+    ) return null;
+
     const data = Object.entries(records).filter(
       ([, val]) => val.list === listName && val.type === type
     );
@@ -145,7 +167,7 @@ export const HomeScreen = () => {
       <div className="list-row" key={`${type}-${listName}`}>
         <div className="list-title-bar">
           <h4 className="list-title">{type} - List {listName}</h4>
-          {isAuthorized && (
+          {(accessLevel === 'full' || accessLevel === type) && (
             <div className="all-buttons">
               <button className="btn small-all plus-all" onClick={incrementAll}>+ All</button>
               <button className="btn small-all minus-all" onClick={decrementAll}>– All</button>
@@ -164,11 +186,13 @@ export const HomeScreen = () => {
               >
                 {value.name}
               </span>
-              <div className="button-group horizontal">
-                <button className="big-btn minus" onClick={() => { updateCount(key, -1); vibrate(); }}>–</button>
-                <span className="candidate-count">{value.count || 0}</span>
-                <button className="big-btn plus" onClick={() => { updateCount(key, 1); vibrate(); }}>+</button>
-              </div>
+              {(accessLevel === 'full' || accessLevel === value.type) && (
+                <div className="button-group horizontal">
+                  <button className="big-btn minus" onClick={() => { updateCount(key, -1); vibrate(); }}>–</button>
+                  <span className="candidate-count">{value.count || 0}</span>
+                  <button className="big-btn plus" onClick={() => { updateCount(key, 1); vibrate(); }}>+</button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -188,7 +212,7 @@ export const HomeScreen = () => {
 
   return (
     <>
-      <div className="homescreen">
+      <div className={`homescreen ${accessLevel === 'chartsOnly' ? 'none' : ''}`}>
         <h1 className="title">Candidates</h1>
 
         {showPasswordModal && (
@@ -213,42 +237,46 @@ export const HomeScreen = () => {
       </div>
 
       {/* Makhtara Chart */}
-      <div className="chart-wrapper">
-        <h2 className="chart-title">Makhtara Chart</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={makhtaraData} margin={{ top: 20, right: 20, left: 20, bottom: 80 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="count" isAnimationActive={false}>
-              {makhtaraData.map((entry, index) => (
-                <Cell key={`m-cell-${index}`} fill={entry.list === '1' ? '#e53935' : '#fdd835'} />
-              ))}
-              <LabelList dataKey="count" position="top" />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {(accessLevel !== null) && (
+        <div className="chart-wrapper">
+          <h2 className="chart-title">Makhtara Chart</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={makhtaraData} margin={{ top: 20, right: 20, left: 20, bottom: 80 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="count" isAnimationActive={false}>
+                {makhtaraData.map((entry, index) => (
+                  <Cell key={`m-cell-${index}`} fill={entry.list === '1' ? '#e53935' : '#fdd835'} />
+                ))}
+                <LabelList dataKey="count" position="top" />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* Baladiyye Chart */}
-      <div className="chart-wrapper">
-        <h2 className="chart-title">Baladiyye Chart</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={baladiyyeData} margin={{ top: 20, right: 20, left: 20, bottom: 80 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="count" isAnimationActive={false}>
-              {baladiyyeData.map((entry, index) => (
-                <Cell key={`b-cell-${index}`} fill={entry.list === '1' ? '#e53935' : '#fdd835'} />
-              ))}
-              <LabelList dataKey="count" position="top" />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {(accessLevel !== null) && (
+        <div className="chart-wrapper">
+          <h2 className="chart-title">Baladiyye Chart</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={baladiyyeData} margin={{ top: 20, right: 20, left: 20, bottom: 80 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="count" isAnimationActive={false}>
+                {baladiyyeData.map((entry, index) => (
+                  <Cell key={`b-cell-${index}`} fill={entry.list === '1' ? '#e53935' : '#fdd835'} />
+                ))}
+                <LabelList dataKey="count" position="top" />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </>
   );
 };
