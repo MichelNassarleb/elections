@@ -152,8 +152,8 @@ export const HomeScreen = () => {
   };
 
   const setTargetVotes = (type: 'makhtara' | 'baladiyye', val: string) => {
-    const value = parseInt(val);
-    if (!isNaN(value) && value > 0) {
+    const value = val ? parseInt(val) : 0;
+    if (!isNaN(value)) {
       const db = getDatabase(app);
       update(ref(db, '/settings'), {
         [type === 'makhtara' ? 'targetVotesMakhtara' : 'targetVotesBaladiyye']: value,
