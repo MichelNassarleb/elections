@@ -41,12 +41,19 @@ export const HomeScreen = () => {
   const [accessLevel, setAccessLevel] = useState<'full' | 'makhtara' | 'baladiyye' | 'chartsOnly' | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(true);
   const [password, setPassword] = useState('');
+
+  const [targetVotesMakhtara, setTargetVotesMakhtara] = useState<number | null>(null);
+  const [targetVotesBaladiyye, setTargetVotesBaladiyye] = useState<number | null>(null);
+  const [inputMakhtara, setInputMakhtara] = useState('');
+  const [inputBaladiyye, setInputBaladiyye] = useState('');
+
   const pendingUpdates: UpdateAction[] = [];
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
     const db = getDatabase(app);
     const recordsRef = ref(db, '/candidatesBaladiyye');
+    const settingsRef = ref(db, '/settings');
 
     get(recordsRef).then(snapshot => {
       if (snapshot.exists()) setRecords(snapshot.val());
@@ -68,13 +75,23 @@ export const HomeScreen = () => {
       });
     });
 
+    onValue(settingsRef, snapshot => {
+      const settings = snapshot.val() || {};
+      if (typeof settings.targetVotesMakhtara === 'number') {
+        setTargetVotesMakhtara(settings.targetVotesMakhtara);
+        setInputMakhtara(String(settings.targetVotesMakhtara));
+      }
+      if (typeof settings.targetVotesBaladiyye === 'number') {
+        setTargetVotesBaladiyye(settings.targetVotesBaladiyye);
+        setInputBaladiyye(String(settings.targetVotesBaladiyye));
+      }
+    });
+
     const connRef = ref(db, '.info/connected');
-    const unsubscribe = onValue(connRef, (snap) => {
+    const unsubscribe = onValue(connRef, snap => {
       const connected = !!snap.val();
       setIsOnline(connected);
-      if (connected) {
-        processPendingUpdates();
-      }
+      if (connected) processPendingUpdates();
     });
 
     return () => unsubscribe();
@@ -97,11 +114,10 @@ export const HomeScreen = () => {
     const current = records[key]?.count || 0;
     const updatedCount = Math.max(0, current + delta);
 
-    update(ref(db, `/candidatesBaladiyye/${key}`), { count: updatedCount })
-      .catch(() => {
-        console.warn('Offline, queuing update:', key, delta);
-        pendingUpdates.push({ key, delta });
-      });
+    update(ref(db, `/candidatesBaladiyye/${key}`), { count: updatedCount }).catch(() => {
+      console.warn('Offline, queuing update:', key, delta);
+      pendingUpdates.push({ key, delta });
+    });
   };
 
   const processPendingUpdates = () => {
@@ -120,20 +136,39 @@ export const HomeScreen = () => {
   const handlePasswordSubmit = () => {
     switch (password) {
       case '123456':
-        setShowPasswordModal(false);
         setAccessLevel('makhtara');
         break;
       case '654321':
-        setShowPasswordModal(false);
         setAccessLevel('baladiyye');
         break;
       case '999000':
-        setShowPasswordModal(false);
         setAccessLevel('chartsOnly');
         break;
       default:
-        setAccessLevel(null);
-        alert('wrong password')
+        alert('wrong password');
+        return;
+    }
+    setShowPasswordModal(false);
+  };
+
+  const setTargetVotes = (type: 'makhtara' | 'baladiyye', val: string) => {
+    const value = parseInt(val);
+    if (!isNaN(value) && value > 0) {
+      const db = getDatabase(app);
+      update(ref(db, '/settings'), {
+        [type === 'makhtara' ? 'targetVotesMakhtara' : 'targetVotesBaladiyye']: value,
+      });
+
+      if (type === 'makhtara') {
+        setInputMakhtara(val);
+        setTargetVotesMakhtara(value);
+      } else {
+        setInputBaladiyye(val);
+        setTargetVotesBaladiyye(value);
+      }
+    } else {
+      if (type === 'makhtara') setInputMakhtara(val);
+      else setInputBaladiyye(val);
     }
   };
 
@@ -167,7 +202,7 @@ export const HomeScreen = () => {
       <div className="list-row" key={`${type}-${listName}`}>
         <div className="list-title-bar">
           <h4 className="list-title">{type} - List {listName}</h4>
-          {((accessLevel === 'full' || accessLevel === type) && accessLevel === 'baladiyye') && (
+          {(accessLevel === 'full' || accessLevel === type) && (
             <div className="all-buttons">
               <button className="btn small-all plus-all" onClick={incrementAll}>+ All</button>
               <button className="btn small-all minus-all" onClick={decrementAll}>– All</button>
@@ -202,12 +237,30 @@ export const HomeScreen = () => {
 
   const makhtaraData = Object.values(records)
     .filter(r => r.type === 'makhtara')
-    .map(r => ({ name: r.name, count: r.count || 0, list: r.list }))
+    .map(r => {
+      const count = r.count || 0;
+      const threshold = targetVotesMakhtara ? Math.floor(targetVotesMakhtara / 2) + 1 : null;
+      return {
+        name: r.name,
+        count,
+        list: r.list,
+        won: threshold !== null && count >= threshold,
+      };
+    })
     .sort((a, b) => b.count - a.count);
 
   const baladiyyeData = Object.values(records)
     .filter(r => r.type === 'baladiyye')
-    .map(r => ({ name: r.name, count: r.count || 0, list: r.list }))
+    .map(r => {
+      const count = r.count || 0;
+      const threshold = targetVotesBaladiyye ? Math.floor(targetVotesBaladiyye / 2) + 1 : null;
+      return {
+        name: r.name,
+        count,
+        list: r.list,
+        won: threshold !== null && count >= threshold,
+      };
+    })
     .sort((a, b) => b.count - a.count);
 
   return (
@@ -230,52 +283,78 @@ export const HomeScreen = () => {
           </div>
         )}
 
+        {accessLevel === 'makhtara' && (
+          <div className="target-input">
+            <label>Total Votes (Makhtara):</label>
+            <input
+              type="number"
+              value={inputMakhtara}
+              onChange={e => setTargetVotes('makhtara', e.target.value)}
+              placeholder="e.g. 400"
+            />
+          </div>
+        )}
+
+        {accessLevel === 'baladiyye' && (
+          <div className="target-input">
+            <label>Total Votes (Baladiyye):</label>
+            <input
+              type="number"
+              value={inputBaladiyye}
+              onChange={e => setTargetVotes('baladiyye', e.target.value)}
+              placeholder="e.g. 500"
+            />
+          </div>
+        )}
+
         <div className="list-block">
           {listNames.map(name => renderListRow('makhtara', name))}
           {listNames.map(name => renderListRow('baladiyye', name))}
         </div>
       </div>
 
-      {/* Makhtara Chart */}
       {(accessLevel !== null) && (
-        <div className="chart-wrapper">
-          <h2 className="chart-title">Makhtara Chart</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={makhtaraData} margin={{ top: 20, right: 20, left: 20, bottom: 80 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="count" isAnimationActive={false}>
-                {makhtaraData.map((entry, index) => (
-                  <Cell key={`m-cell-${index}`} fill={entry.list === '1' ? '#e53935' : '#fdd835'} />
-                ))}
-                <LabelList dataKey="count" position="top" />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+        <>
+          <div className="chart-wrapper">
+            <h2 className="chart-title">Makhtara Chart</h2>
+            <h3>{`Total votes: ${targetVotesMakhtara || 0}`}</h3>
 
-      {/* Baladiyye Chart */}
-      {(accessLevel !== null) && (
-        <div className="chart-wrapper">
-          <h2 className="chart-title">Baladiyye Chart</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={baladiyyeData} margin={{ top: 20, right: 20, left: 20, bottom: 80 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="count" isAnimationActive={false}>
-                {baladiyyeData.map((entry, index) => (
-                  <Cell key={`b-cell-${index}`} fill={entry.list === '1' ? '#e53935' : '#fdd835'} />
-                ))}
-                <LabelList dataKey="count" position="top" />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={makhtaraData} margin={{ top: 20, right: 20, left: 20, bottom: 80 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" isAnimationActive={false}>
+                  {makhtaraData.map((entry, index) => (
+                    <Cell key={`m-cell-${index}`} fill={entry.won ? 'green' : (entry.list === '1' ? '#e53935' : '#fdd835')} />
+                  ))}
+                  <LabelList dataKey="count" position="top" />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="chart-wrapper">
+            <h2 className="chart-title">Baladiyye Chart</h2>
+            <h3>{`Total votes: ${targetVotesBaladiyye || 0}`}</h3>
+
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={baladiyyeData} margin={{ top: 20, right: 20, left: 20, bottom: 80 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" isAnimationActive={false}>
+                  {baladiyyeData.map((entry, index) => (
+                    <Cell key={`b-cell-${index}`} fill={entry.won ? 'green' : (entry.list === '1' ? '#e53935' : '#fdd835')} />
+                  ))}
+                  <LabelList dataKey="count" position="top" />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </>
       )}
     </>
   );
