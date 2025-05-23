@@ -119,22 +119,22 @@ export const HomeScreen = () => {
 
   const handlePasswordSubmit = () => {
     switch (password) {
-      case '111222':
-        setAccessLevel('full');
-        break;
       case '123456':
+        setShowPasswordModal(false);
         setAccessLevel('makhtara');
         break;
       case '654321':
+        setShowPasswordModal(false);
         setAccessLevel('baladiyye');
         break;
       case '999000':
+        setShowPasswordModal(false);
         setAccessLevel('chartsOnly');
         break;
       default:
         setAccessLevel(null);
+        alert('wrong password')
     }
-    setShowPasswordModal(false);
   };
 
   const listNames = Array.from(new Set(Object.values(records).map(r => r.list))).sort();
@@ -167,7 +167,7 @@ export const HomeScreen = () => {
       <div className="list-row" key={`${type}-${listName}`}>
         <div className="list-title-bar">
           <h4 className="list-title">{type} - List {listName}</h4>
-          {(accessLevel === 'full' || accessLevel === type) && (
+          {((accessLevel === 'full' || accessLevel === type) && accessLevel === 'baladiyye') && (
             <div className="all-buttons">
               <button className="btn small-all plus-all" onClick={incrementAll}>+ All</button>
               <button className="btn small-all minus-all" onClick={decrementAll}>– All</button>
